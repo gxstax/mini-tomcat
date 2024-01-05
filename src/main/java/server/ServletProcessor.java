@@ -28,8 +28,8 @@ public class ServletProcessor {
             "Date: ${ZonedDateTime}\r\n" +
             "\r\n";
 
-    public void process(HttpRequest request, Response response) {
-        //首先根据uri最后一个/号来定位，后面的字符串认为是servlet名字
+    public void process(HttpRequest request, HttpResponse response) {
+        // 首先根据uri最后一个/号来定位，后面的字符串认为是servlet名字
         String uri = request.getUri();
         String servletName = uri.substring(uri.lastIndexOf("/") + 1);
         URLClassLoader loader = null;
@@ -46,13 +46,8 @@ public class ServletProcessor {
             System.out.println(e.toString());
         }
 
-        // 获取PrintWriter
-        try {
-            response.setCharacterEncoding("UTF-8");
-            writer = response.getWriter();
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        }
+        // 设置编码格式
+        response.setCharacterEncoding("UTF-8");
 
         //
         Class<?> servletClass = null;
@@ -63,8 +58,11 @@ public class ServletProcessor {
         }
 
         // 写响应头
-        String head = composeResponseHead();
-        writer.println(head);
+        try {
+            response.sendHeaders();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         //创建servlet新实例，然后调用service()，由它来写动态内容到响应体
         Servlet servlet = null;
@@ -76,16 +74,5 @@ public class ServletProcessor {
         } catch (Throwable e) {
             System.out.println(e.toString());
         }
-    }
-
-    private String composeResponseHead() {
-        Map<String, Object> valuesMap = new HashMap<>();
-        valuesMap.put("StatusCode", "200");
-        valuesMap.put("StatusName", "OK");
-        valuesMap.put("ContentType", "text/html;charset=utf-8");
-        valuesMap.put("ZonedDateTime", DateTimeFormatter.ISO_ZONED_DATE_TIME.format(ZonedDateTime.now()));
-        StrSubstitutor sub = new StrSubstitutor(valuesMap);
-        String responseHead = sub.replace(OKMessage);
-        return responseHead;
     }
 }

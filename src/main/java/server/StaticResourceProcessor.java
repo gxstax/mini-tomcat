@@ -37,21 +37,23 @@ public class StaticResourceProcessor {
             "Date: ${ZonedDateTime}\r\n" +
             "\r\n";
 
-    public void process(Request request, Response response) throws IOException {
+    public void process(HttpRequest request, HttpResponse response) throws IOException {
         byte[] bytes = new byte[BUFFER_SIZE];
         FileInputStream fis = null;
         OutputStream output = null;
 
         try {
+            // 设置编码格式
+            response.setCharacterEncoding("UTF-8");
+            response.sendHeaders();
+
             output = response.getOutput();
             File file = new File(HttpServer.WEB_ROOT, request.getUri());
             if (file.exists()) {
-                // 拼接响应头
-                String head = composeResponseHead(file);
-                output.write(head.getBytes("utf-8"));
 
                 // 读取文件内容，写入输出流
                 fis = new FileInputStream(file);
+
                 int ch = fis.read(bytes, 0, BUFFER_SIZE);
                 while (ch != -1) {
                     output.write(bytes, 0, ch);

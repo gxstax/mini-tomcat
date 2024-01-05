@@ -22,6 +22,7 @@ public class SocketInputStream extends InputStream {
     protected int count;
     protected int pos;
     protected InputStream is;
+
     public SocketInputStream(InputStream is, int bufferSize) {
         this.is = is;
         buf = new byte[bufferSize];

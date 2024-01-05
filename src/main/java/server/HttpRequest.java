@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class HttpRequest implements HttpServletRequest {
 
-    private InputStream  input;
+    private InputStream input;
 
     private SocketInputStream sis;
 
@@ -36,11 +36,34 @@ public class HttpRequest implements HttpServletRequest {
 
     public HttpRequest(InputStream input) {
         this.input = input;
+        sis = new SocketInputStream(this.input, 2048);
     }
 
     public void parse(Socket socket) throws IOException {
-        this.sis.readRequestLine(requestLine);
+        try {
+            // 解析连接信息
+            parseConnection(socket);
+
+            this.sis.readRequestLine(requestLine);
+
+            parseHeaders();
+        } catch (ServletException e) {
+            e.printStackTrace();
+        }
         this.uri = new String(requestLine.uri, 0, requestLine.uriEnd);
+    }
+
+    /**
+     * <p>
+     * 解析连接信息
+     * </p>
+     *
+     * @param socket
+     * @return void
+     */
+    private void parseConnection(Socket socket) {
+        this.address = socket.getInetAddress();
+        this.port = socket.getPort();
     }
 
     public String getUri() {

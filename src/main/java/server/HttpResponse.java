@@ -2,12 +2,16 @@ package server;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * <p>
@@ -18,6 +22,80 @@ import java.util.Locale;
  * @since 2024/1/4 17:37
  */
 public class HttpResponse implements HttpServletResponse {
+    private HttpRequest request;
+
+    private OutputStream output;
+
+    private PrintWriter writer;
+
+    String contentType = null;
+
+    long contentLength = -1;
+    String charset = null;
+    String characterEncoding = null;
+    String protocol = "HTTP/1.1";
+
+    // 默认返回成功
+    String message = getStatusMessage(HttpServletResponse.SC_OK);
+    int status = HttpServletResponse.SC_OK;
+
+    // 保存头信息的map
+    Map<String, String> headers = new ConcurrentHashMap<>();
+
+    protected String getStatusMessage(int status) {
+        switch (status) {
+            case SC_OK:
+                return "OK";
+            case SC_ACCEPTED:
+                return "Accepted";
+            case SC_BAD_GATEWAY:
+                return "Bad Gateway";
+            case SC_BAD_REQUEST:
+                return "Bad Request";
+            case SC_CONTINUE:
+                return "Continue";
+            case SC_FORBIDDEN:
+                return "Forbidden";
+            case SC_INTERNAL_SERVER_ERROR:
+                return "Internal Server Error";
+            case SC_METHOD_NOT_ALLOWED:
+                return "Method Not Allowed";
+            case SC_NOT_FOUND:
+                return "Not Found";
+            case SC_NOT_IMPLEMENTED:
+                return ("Not Implemented");
+            case SC_REQUEST_URI_TOO_LONG:
+                return ("Request URI Too Long");
+            case SC_SERVICE_UNAVAILABLE:
+                return ("Service Unavailable");
+            case SC_UNAUTHORIZED:
+                return ("Unauthorized");
+            default:
+                return "HTTP Response Status" + status;
+        }
+    }
+
+    public HttpResponse(OutputStream output) {
+        this.output = output;
+    }
+
+    public HttpRequest getRequest() {
+        return request;
+    }
+
+    private String getProtocol() {
+        return this.protocol;
+    }
+
+
+    public void setRequest(HttpRequest request) {
+        this.request = request;
+    }
+
+    public OutputStream getOutput() {
+        return this.output;
+    }
+
     @Override
     public void addCookie(Cookie cookie) {
 
@@ -75,12 +153,58 @@ public class HttpResponse implements HttpServletResponse {
 
     @Override
     public void setHeader(String name, String value) {
-
+        headers.put(name, value);
+        if (name.toLowerCase() == DefaultHeaders.CONTENT_LENGTH_NAME) {
+            setContentLength(Integer.parseInt(value));
+        }
+        if (name.toLowerCase() == DefaultHeaders.CONNECTION_NAME) {
+            setContentType(value);
+        }
     }
 
     @Override
     public void addHeader(String name, String value) {
+        headers.put(name, value);
+        if (name.toLowerCase() == DefaultHeaders.CONTENT_LENGTH_NAME) {
+            setContentLength(Integer.parseInt(value));
+        }
+        if (name.toLowerCase() == DefaultHeaders.CONNECTION_NAME) {
+            setContentType(value);
+        }
+    }
 
+    public void sendHeaders() throws IOException {
+        PrintWriter outputWrite = getWriter();
+
+        // 状态行输出
+        outputWrite.print(this.getProtocol());
+        outputWrite.print(" ");
+        outputWrite.print(status);
+        if (null != message) {
+            outputWrite.print(" ");
+            outputWrite.print(message);
+        }
+        outputWrite.print("\r\n");
+
+        if (null != getContentType()) {
+            outputWrite.print("Content-Type: "+ getContentType() + "\r\n");
+        }
+
+        if (getContentLength() > 0) {
+            outputWrite.print("Content-Length: "+ getContentLength() + "\r\n");
+        }
+
+        // 输出头信息
+        Iterator<String> names = headers.keySet().iterator();
+        while (names.hasNext()) {
+            String name = names.next();
+            String value = headers.get(name);
+            outputWrite.print(name + ": " + value + "\r\n");
+        }
+
+        // 最后输出空行
+        outputWrite.print("\r\n");
+        outputWrite.flush();
     }
 
     @Override
@@ -95,42 +219,42 @@ public class HttpResponse implements HttpServletResponse {
 
     @Override
     public void setStatus(int sc) {
-
+        this.status = sc;
     }
 
     @Override
     public void setStatus(int sc, String sm) {
-
+        this.status = sc;
     }
 
     @Override
     public int getStatus() {
-        return 0;
+        return this.status;
     }
 
     @Override
     public String getHeader(String name) {
-        return null;
+        return headers.get(name);
     }
 
     @Override
     public Collection<String> getHeaders(String name) {
-        return null;
+        return headers.values();
     }
 
     @Override
     public Collection<String> getHeaderNames() {
-        return null;
+        return headers.keySet();
     }
 
     @Override
     public String getCharacterEncoding() {
-        return null;
+        return this.charset;
     }
 
     @Override
     public String getContentType() {
-        return null;
+        return this.contentType;
     }
 
     @Override
@@ -140,17 +264,24 @@ public class HttpResponse implements HttpServletResponse {
 
     @Override
     public PrintWriter getWriter() throws IOException {
-        return null;
+        if (null == this.writer) {
+            writer = new PrintWriter(new OutputStreamWriter(output, getCharacterEncoding()), true);
+        }
+        return this.writer;
     }
 
     @Override
     public void setCharacterEncoding(String charset) {
-
+        this.charset = charset;
     }
 
     @Override
     public void setContentLength(int len) {
+        this.contentLength = len;
+    }
 
+    public long getContentLength() {
+        return this.contentLength;
     }
 
     @Override
@@ -160,7 +291,7 @@ public class HttpResponse implements HttpServletResponse {
 
     @Override
     public void setContentType(String type) {
-
+        this.contentType = type;
     }
 
     @Override
