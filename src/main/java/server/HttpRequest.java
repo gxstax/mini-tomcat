@@ -28,6 +28,8 @@ public class HttpRequest implements HttpServletRequest {
 
     private String uri;
 
+    private boolean parsed = false;
+
     /**
      * 请求参数字符串
      */
@@ -36,7 +38,7 @@ public class HttpRequest implements HttpServletRequest {
     InetAddress address;
     int port;
     protected HashMap<String, String> headers = new HashMap<>();
-    protected Map<String, String> parameters = new ConcurrentHashMap<>();
+    protected Map<String, String[]> parameters = new ConcurrentHashMap<>();
     HttpRequestLine requestLine = new HttpRequestLine();
 
     public HttpRequest(InputStream input) {
@@ -73,6 +75,13 @@ public class HttpRequest implements HttpServletRequest {
         this.port = socket.getPort();
     }
 
+    /**
+     * <p>
+     * 解析请求行
+     * </p>
+     *
+     * @return void
+     */
     private void parseRequestLine() {
         int question = requestLine.indexOf("?");
 
@@ -85,14 +94,13 @@ public class HttpRequest implements HttpServletRequest {
         }
     }
 
-    public String getUri() {
-        return uri;
-    }
-
-    public void setUri(String uri) {
-        this.uri = uri;
-    }
-
+    /**
+     * <p>
+     * 解析头信息
+     * </p>
+     *
+     * @return void
+     */
     private void parseHeaders() throws IOException, ServletException {
         while (true) {
             HttpHeader header = new HttpHeader();
@@ -123,6 +131,144 @@ public class HttpRequest implements HttpServletRequest {
                 headers.put(name, value);
             }
         }
+    }
+
+    protected void parseParameters() {
+        String encoding = getCharacterEncoding();
+        System.out.println(encoding);
+        if (encoding == null) {
+            encoding = "ISO-8859-1";
+        }
+        String qString = getQueryString();
+        System.out.println("getQueryString:"+qString);
+        if (qString != null) {
+            byte[] bytes = new byte[qString.length()];
+            try {
+                bytes=qString.getBytes(encoding);
+                parseParameters(this.parameters, bytes, encoding);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();;
+            }
+        }
+        String contentType = getContentType();
+        if (contentType == null) {
+            contentType = "";
+        }
+        int semicolon = contentType.indexOf(';');
+        if (semicolon >= 0) {
+            contentType = contentType.substring(0, semicolon).trim();
+        }
+        else {
+            contentType = contentType.trim();
+        }
+        if ("POST".equals(getMethod()) && (getContentLength() > 0)
+                && "application/x-www-form-urlencoded".equals(contentType)) {
+            try {
+                int max = getContentLength();
+                int len = 0;
+                byte buf[] = new byte[getContentLength()];
+                ServletInputStream is = getInputStream();
+                while (len < max) {
+                    int next = is.read(buf, len, max - len);
+                    if (next < 0) {
+                        break;
+                    }
+                    len += next;
+                }
+                is.close();
+                if (len < max) {
+                    throw new RuntimeException("Content length mismatch");
+                }
+                parseParameters(this.parameters, buf, encoding);
+            }
+            catch (UnsupportedEncodingException ue) {
+            }
+            catch (IOException e) {
+                throw new RuntimeException("Content read fail");
+            }
+        }
+    }
+
+    private byte convertHexDigit(byte b) {
+        if ((b >= '0') && (b <= '9')) {
+            return (byte)(b - '0');
+        }
+        if ((b >= 'a') && (b <= 'f')) {
+            return (byte)(b - 'a' + 10);
+        }
+        if ((b >= 'A') && (b <= 'F')) {
+            return (byte)(b - 'A' + 10);
+        }
+        return 0;
+    }
+
+    public void parseParameters(Map<String,String[]> map, byte[] data, String encoding)
+            throws UnsupportedEncodingException {
+        if (parsed) {
+            return;
+        }
+        System.out.println(data);
+        if (data != null && data.length > 0) {
+            int    pos = 0;
+            int    ix = 0;
+            int    ox = 0;
+            String key = null;
+            String value = null;
+            while (ix < data.length) {
+                byte c = data[ix++];
+                switch ((char) c) {
+                    case '&':
+                        value = new String(data, 0, ox, encoding);
+                        if (key != null) {
+                            putMapEntry(map,key, value);
+                            key = null;
+                        }
+                        ox = 0;
+                        break;
+                    case '=':
+                        key = new String(data, 0, ox, encoding);
+                        ox = 0;
+                        break;
+                    case '+':
+                        data[ox++] = (byte)' ';
+                        break;
+                    case '%':
+                        data[ox++] = (byte)((convertHexDigit(data[ix++]) << 4)
+                                + convertHexDigit(data[ix++]));
+                        break;
+                    default:
+                        data[ox++] = c;
+                }
+            }
+            //The last value does not end in '&'.  So save it now.
+            if (key != null) {
+                value = new String(data, 0, ox, encoding);
+                putMapEntry(map,key, value);
+            }
+        }
+        parsed = true;
+    }
+
+    private static void putMapEntry( Map<String,String[]> map, String name, String value) {
+        String[] newValues = null;
+        String[] oldValues = (String[]) map.get(name);
+        if (oldValues == null) {
+            newValues = new String[1];
+            newValues[0] = value;
+        } else {
+            newValues = new String[oldValues.length + 1];
+            System.arraycopy(oldValues, 0, newValues, 0, oldValues.length);
+            newValues[oldValues.length] = value;
+        }
+        map.put(name, newValues);
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
     }
 
     @Override
@@ -327,22 +473,36 @@ public class HttpRequest implements HttpServletRequest {
 
     @Override
     public String getParameter(String name) {
-        return null;
+        parseParameters();
+        String values[] = parameters.get(name);
+        if (values != null) {
+            return (values[0]);
+        } else {
+            return (null);
+        }
     }
 
     @Override
     public Enumeration<String> getParameterNames() {
-        return null;
+        parseParameters();
+        return (Collections.enumeration(parameters.keySet()));
     }
 
     @Override
     public String[] getParameterValues(String name) {
-        return new String[0];
+        parseParameters();
+        String values[] = parameters.get(name);
+        if (values != null) {
+            return (values);
+        } else {
+            return (null);
+        }
     }
 
     @Override
     public Map<String, String[]> getParameterMap() {
-        return null;
+        parseParameters();
+        return (this.parameters);
     }
 
     @Override
