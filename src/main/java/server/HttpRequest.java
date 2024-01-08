@@ -28,6 +28,11 @@ public class HttpRequest implements HttpServletRequest {
 
     private String uri;
 
+    /**
+     * 请求参数字符串
+     */
+    private String queryString;
+
     InetAddress address;
     int port;
     protected HashMap<String, String> headers = new HashMap<>();
@@ -45,6 +50,8 @@ public class HttpRequest implements HttpServletRequest {
             parseConnection(socket);
 
             this.sis.readRequestLine(requestLine);
+
+            parseRequestLine();
 
             parseHeaders();
         } catch (ServletException e) {
@@ -64,6 +71,18 @@ public class HttpRequest implements HttpServletRequest {
     private void parseConnection(Socket socket) {
         this.address = socket.getInetAddress();
         this.port = socket.getPort();
+    }
+
+    private void parseRequestLine() {
+        int question = requestLine.indexOf("?");
+
+        if (question > 0) {
+            this.queryString = new String(requestLine.uri, question + 1, requestLine.uriEnd - question - 1);
+            this.uri = new String(requestLine.uri, 0 , question);
+        } else {
+            queryString = null;
+            uri = new String(requestLine.uri, 0, requestLine.uriEnd);
+        }
     }
 
     public String getUri() {
@@ -143,7 +162,7 @@ public class HttpRequest implements HttpServletRequest {
 
     @Override
     public String getMethod() {
-        return null;
+        return new String(this.requestLine.method, 0, this.requestLine.methodEnd);
     }
 
     @Override

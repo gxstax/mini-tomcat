@@ -1,7 +1,8 @@
 package server;
 
-import java.io.IOException;
-import java.io.InputStream;
+import javax.servlet.ReadListener;
+import javax.servlet.ServletInputStream;
+import java.io.*;
 
 /**
  * <p>
@@ -11,7 +12,7 @@ import java.io.InputStream;
  * @author Ant
  * @since 2024/1/4 18:33
  */
-public class SocketInputStream extends InputStream {
+public class SocketInputStream extends ServletInputStream {
     private static final byte CR = (byte) '\r';
     private static final byte LF = (byte) '\n';
     private static final byte SP = (byte) ' ';
@@ -255,12 +256,35 @@ public class SocketInputStream extends InputStream {
         buf = null;
     }
 
+    /**
+     * <p>
+     * 读取输入流到内存中的 buf 缓冲中
+     * </p>
+     *
+     * @return void
+     */
     protected void fill() throws IOException {
         pos = 0;
         count = 0;
+        // 读取输入流
         int nRead = is.read(buf, 0, buf.length);
         if (nRead > 0) {
             count = nRead;
         }
+    }
+
+    @Override
+    public boolean isFinished() {
+        return false;
+    }
+
+    @Override
+    public boolean isReady() {
+        return false;
+    }
+
+    @Override
+    public void setReadListener(ReadListener readListener) {
+
     }
 }
