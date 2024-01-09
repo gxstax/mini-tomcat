@@ -58,7 +58,13 @@ public class HttpProcessor implements Runnable {
 
             // Create a request object and parse the input stream
             HttpRequest request = new HttpRequest(input);
+            // 应用层的协议解析
             request.parse(socket);
+
+            // handle session
+            if (null == request.getSessionId() || request.getSessionId().equals("")) {
+                request.getSession(true);
+            }
 
             // Create a response object and set the request
             HttpResponse response = new HttpResponse(output);

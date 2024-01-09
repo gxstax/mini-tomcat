@@ -41,11 +41,24 @@ public class HttpRequest implements HttpServletRequest {
     protected Map<String, String[]> parameters = new ConcurrentHashMap<>();
     HttpRequestLine requestLine = new HttpRequestLine();
 
+    Cookie[] cookies;
+    HttpSession session;
+    String sessionId;
+    SessionFacade sessionFacade;
+
     public HttpRequest(InputStream input) {
         this.input = input;
         sis = new SocketInputStream(this.input, 2048);
     }
 
+    /**
+     * <p>
+     * 应用层协议解析
+     * </p>
+     *
+     * @param socket
+     * @return void
+     */
     public void parse(Socket socket) throws IOException {
         try {
             // 解析连接信息
@@ -84,13 +97,19 @@ public class HttpRequest implements HttpServletRequest {
      */
     private void parseRequestLine() {
         int question = requestLine.indexOf("?");
-
         if (question > 0) {
             this.queryString = new String(requestLine.uri, question + 1, requestLine.uriEnd - question - 1);
             this.uri = new String(requestLine.uri, 0 , question);
         } else {
             queryString = null;
             uri = new String(requestLine.uri, 0, requestLine.uriEnd);
+        }
+
+        // Check if there is a sessionId parameter
+        int semicolon = uri.indexOf(DefaultHeaders.JSESSIONID_NAME);
+        if (semicolon > 0) {
+            sessionId = uri.substring(semicolon + DefaultHeaders.JSESSIONID_NAME.length());
+            uri = uri.substring(0, semicolon);
         }
     }
 
@@ -127,10 +146,49 @@ public class HttpRequest implements HttpServletRequest {
                 headers.put(name, value);
             } else if (name.equals(DefaultHeaders.TRANSFER_ENCODING_NAME)) {
                 headers.put(name, value);
+            } else if (name.equals(DefaultHeaders.COOKIE_NAME)) {
+                headers.put(name, value);
+                Cookie[] cookieArr = parseCookieHeader(value);
+                this.cookies = cookieArr;
+                for (int i = 0; i < cookies.length; i++) {
+                    if (cookies[i].getName().equals("jsessionid")) {
+                        this.sessionId = cookies[i].getValue();
+                    }
+                }
             } else {
                 headers.put(name, value);
             }
         }
+    }
+
+    public  Cookie[] parseCookieHeader(String header) {
+        if ((header == null) || (header.length() < 1) )
+            return (new Cookie[0]);
+        ArrayList<Cookie> cookieal = new ArrayList<>();
+        while (header.length() > 0) {
+            int semicolon = header.indexOf(';');
+            if (semicolon < 0)
+                semicolon = header.length();
+            if (semicolon == 0)
+                break;
+
+            String token = header.substring(0, semicolon);
+            if (semicolon < header.length())
+                header = header.substring(semicolon + 1);
+            else
+                header = "";
+
+            try {
+                int equals = token.indexOf('=');
+                if (equals > 0) {
+                    String name = token.substring(0, equals).trim();
+                    String value = token.substring(equals+1).trim();
+                    cookieal.add(new Cookie(name, value));
+                }
+            } catch (Throwable e) {
+            }
+        }
+        return ((Cookie[]) cookieal.toArray (new Cookie [cookieal.size()]));
     }
 
     protected void parseParameters() {
@@ -368,12 +426,34 @@ public class HttpRequest implements HttpServletRequest {
 
     @Override
     public HttpSession getSession(boolean create) {
-        return null;
+        if (sessionFacade != null) {
+            return sessionFacade;
+        }
+        if (null != sessionId) {
+            session = HttpConnector.sessions.get(sessionId);
+            if (session != null) {
+                sessionFacade = new SessionFacade(session);
+                return sessionFacade;
+            } else {
+                session = HttpConnector.createSession();
+                sessionFacade = new SessionFacade(session);
+                return sessionFacade;
+            }
+        } else {
+            session = HttpConnector.createSession();
+            sessionFacade = new SessionFacade(session);
+            sessionId = session.getId();
+            return sessionFacade;
+        }
+    }
+
+    public String getSessionId() {
+        return sessionId;
     }
 
     @Override
     public HttpSession getSession() {
-        return null;
+        return this.sessionFacade;
     }
 
     @Override
