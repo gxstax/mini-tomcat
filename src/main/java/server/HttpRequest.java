@@ -105,9 +105,9 @@ public class HttpRequest implements HttpServletRequest {
             uri = new String(requestLine.uri, 0, requestLine.uriEnd);
         }
 
-        // Check if there is a sessionId parameter
+        // 处理参数串中带有jsessionid的情况
         int semicolon = uri.indexOf(DefaultHeaders.JSESSIONID_NAME);
-        if (semicolon > 0) {
+        if (semicolon >= 0) {
             sessionId = uri.substring(semicolon + DefaultHeaders.JSESSIONID_NAME.length());
             uri = uri.substring(0, semicolon);
         }

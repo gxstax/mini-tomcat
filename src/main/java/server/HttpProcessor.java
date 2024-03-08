@@ -14,6 +14,7 @@ import java.net.Socket;
  */
 public class HttpProcessor implements Runnable {
     Socket socket;
+    // 是否正在处理
     boolean available = false;
     HttpConnector connector;
 
@@ -43,6 +44,14 @@ public class HttpProcessor implements Runnable {
         }
     }
 
+    /**
+     * <p>
+     * 处理具体的请求
+     * </p>
+     *
+     * @param socket
+     * @return void
+     */
     public void process(Socket socket) {
         try {
             Thread.sleep(3000);
@@ -85,6 +94,14 @@ public class HttpProcessor implements Runnable {
         }
     }
 
+    /**
+     * <p>
+     * synchronized：当前处理器对象同步，确保一个处理一次只会绑定一个socket对象
+     * </p>
+     *
+     * @param socket
+     * @return void
+     */
     public synchronized void assign(Socket socket) {
         // available 为true 说明正在处理中，需要等待
         while (available) {

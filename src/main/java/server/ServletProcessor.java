@@ -31,7 +31,7 @@ public class ServletProcessor {
     public void process(HttpRequest request, HttpResponse response) {
         // 首先根据uri最后一个/号来定位，后面的字符串认为是servlet名字
         String uri = request.getUri();
-        String servletName = uri.substring(uri.lastIndexOf("/") + 1);
+        String servletName = uri.substring(uri.lastIndexOf("/") + 1, uri.lastIndexOf(";"));
         URLClassLoader loader = null;
         PrintWriter writer = null;
 

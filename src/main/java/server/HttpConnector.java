@@ -28,8 +28,21 @@ public class HttpConnector implements Runnable {
     // Processor池
     Deque<HttpProcessor> processors = new ArrayDeque<>();
 
+    // sessions map 存放 session
     public static Map<String, HttpSession> sessions = new ConcurrentHashMap<>();
 
+    public void start(HttpConnector connector) {
+        Thread thread = new Thread(this);
+        thread.start();
+    }
+
+    /**
+     * <p>
+     * 连接器运行
+     * </p>
+     *
+     * @return void
+     */
     public void run() {
         ServerSocket serverSocket = null;
         int port = 8080;
@@ -52,6 +65,7 @@ public class HttpConnector implements Runnable {
                     continue;
                 }
 
+                // 分配给处理器 socket
                 processor.assign(socket);
 
                 // Close Socket
@@ -60,11 +74,6 @@ public class HttpConnector implements Runnable {
                 throw new RuntimeException(e);
             }
         }
-    }
-
-    public void start(HttpConnector connector) {
-        Thread thread = new Thread(this);
-        thread.start();
     }
 
     private HttpProcessor createProcessor() {
