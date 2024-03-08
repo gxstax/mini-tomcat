@@ -3,14 +3,12 @@ package server;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -41,6 +39,8 @@ public class HttpResponse implements HttpServletResponse {
 
     // 保存头信息的map
     Map<String, String> headers = new ConcurrentHashMap<>();
+
+    List<Cookie> cookies = new ArrayList<>();
 
     protected String getStatusMessage(int status) {
         switch (status) {
@@ -98,7 +98,9 @@ public class HttpResponse implements HttpServletResponse {
 
     @Override
     public void addCookie(Cookie cookie) {
-
+        synchronized (cookie) {
+            this.cookies.add(cookie);
+        }
     }
 
     @Override
@@ -200,6 +202,28 @@ public class HttpResponse implements HttpServletResponse {
             String name = names.next();
             String value = headers.get(name);
             outputWrite.print(name + ": " + value + "\r\n");
+        }
+
+        HttpSession session = this.request.getSession(false);
+        if (null != session) {
+            Cookie cookie = new Cookie(DefaultHeaders.JSESSIONID_NAME, session.getId());
+            cookie.setMaxAge(-1);
+            addCookie(cookie);
+        }
+
+        synchronized (cookies) {
+            Iterator<Cookie> item = cookies.iterator();
+            while (item.hasNext()) {
+                Cookie cookie = item.next();
+                outputWrite.print(CookieTools.getCookieHeaderName(cookie));
+                outputWrite.print(": ");
+                StringBuffer sbValue = new StringBuffer();
+                CookieTools.getCookieHeaderValue(cookie, sbValue);
+                System.out.println("set cookie jsessionid string: " + sbValue.toString());
+
+                outputWrite.print(sbValue.toString());
+                outputWrite.print("\r\n");
+            }
         }
 
         // 最后输出空行
