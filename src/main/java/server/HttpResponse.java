@@ -30,7 +30,7 @@ public class HttpResponse implements HttpServletResponse {
 
     long contentLength = -1;
     String charset = null;
-    String characterEncoding = null;
+    String characterEncoding = "UTF-8";
     String protocol = "HTTP/1.1";
 
     // 默认返回成功
@@ -41,6 +41,16 @@ public class HttpResponse implements HttpServletResponse {
     Map<String, String> headers = new ConcurrentHashMap<>();
 
     List<Cookie> cookies = new ArrayList<>();
+
+    public HttpResponse() {}
+
+    public void setStream(OutputStream output) {
+        this.output = output;
+    }
+
+    public HttpResponse(OutputStream output) {
+        this.output = output;
+    }
 
     protected String getStatusMessage(int status) {
         switch (status) {
@@ -73,10 +83,6 @@ public class HttpResponse implements HttpServletResponse {
             default:
                 return "HTTP Response Status" + status;
         }
-    }
-
-    public HttpResponse(OutputStream output) {
-        this.output = output;
     }
 
     public HttpRequest getRequest() {
@@ -231,6 +237,14 @@ public class HttpResponse implements HttpServletResponse {
         outputWrite.flush();
     }
 
+    public void finishResponse() {
+        try {
+            this.getWriter().flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void setIntHeader(String name, int value) {
 
@@ -273,7 +287,7 @@ public class HttpResponse implements HttpServletResponse {
 
     @Override
     public String getCharacterEncoding() {
-        return this.charset;
+        return this.characterEncoding;
     }
 
     @Override

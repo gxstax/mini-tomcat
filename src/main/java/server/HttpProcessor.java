@@ -18,6 +18,9 @@ public class HttpProcessor implements Runnable {
     boolean available = false;
     HttpConnector connector;
 
+    private boolean keepAlive = false;
+    private boolean http11 = true;
+
     public HttpProcessor() {
     }
 
@@ -53,45 +56,57 @@ public class HttpProcessor implements Runnable {
      * @return void
      */
     public void process(Socket socket) {
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e1) {
-            e1.printStackTrace();
-        }
-
         InputStream input = null;
         OutputStream output = null;
         try {
             input = socket.getInputStream();
             output = socket.getOutputStream();
+            keepAlive = true;
+            while (keepAlive) {
+                // Create a request object and parse the input stream
+                HttpRequest request = new HttpRequest(input);
 
-            // Create a request object and parse the input stream
-            HttpRequest request = new HttpRequest(input);
-            // 应用层的协议解析
-            request.parse(socket);
+                // Create a response object and set the request
+                HttpResponse response = new HttpResponse(output);
+                response.setRequest(request);
+                request.setResponse(response);
 
-            // handle session
-            if (null == request.getSessionId() || request.getSessionId().equals("")) {
-                request.getSession(true);
+                // 应用层的协议解析
+                request.parse(socket);
+
+                // handle session
+                if (null == request.getSessionId() || request.getSessionId().equals("")) {
+                    request.getSession(true);
+                }
+
+                response.sendHeaders();
+
+                if (request.getUri().startsWith("/servlet/")) {
+                    ServletProcessor processor = new ServletProcessor();
+                    processor.process(request, response);
+                } else {
+                    StaticResourceProcessor processor = new StaticResourceProcessor();
+                    processor.process(request, response);
+                }
+
+                finishResponse(response);
+                System.out.println("response header connection------" + response.getHeader("Connection"));
+                if ("close".equals(response.getHeader("Connection"))) {
+                    keepAlive = false;
+                }
             }
 
-            // Create a response object and set the request
-            HttpResponse response = new HttpResponse(output);
-            response.setRequest(request);
-
-            if (request.getUri().startsWith("/servlet/")) {
-                ServletProcessor processor = new ServletProcessor();
-                processor.process(request, response);
-            } else {
-                StaticResourceProcessor processor = new StaticResourceProcessor();
-                processor.process(request, response);
-            }
 
             // Close the socket
             socket.close();
+            socket = null;
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void finishResponse(HttpResponse response) {
+        response.finishResponse();
     }
 
     /**

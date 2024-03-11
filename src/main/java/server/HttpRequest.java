@@ -46,9 +46,22 @@ public class HttpRequest implements HttpServletRequest {
     String sessionId;
     SessionFacade sessionFacade;
 
+    private HttpResponse response;
+
+    public HttpRequest() {}
+
     public HttpRequest(InputStream input) {
         this.input = input;
         sis = new SocketInputStream(this.input, 2048);
+    }
+
+    public void setStream(InputStream input) {
+        this.input = input;
+        this.sis = new SocketInputStream(this.input, 2048);
+    }
+
+    public void setResponse(HttpResponse response) {
+        this.response = response;
     }
 
     /**
@@ -146,6 +159,9 @@ public class HttpRequest implements HttpServletRequest {
                 headers.put(name, value);
             } else if (name.equals(DefaultHeaders.CONNECTION_NAME)) {
                 headers.put(name, value);
+                if (value.equals("close")) {
+                    response.setHeader("Connection", "close");
+                }
             } else if (name.equals(DefaultHeaders.TRANSFER_ENCODING_NAME)) {
                 headers.put(name, value);
             } else if (name.equals(DefaultHeaders.COOKIE_NAME)) {

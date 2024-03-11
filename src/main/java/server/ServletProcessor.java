@@ -32,27 +32,13 @@ public class ServletProcessor {
         // 首先根据uri最后一个/号来定位，后面的字符串认为是servlet名字
         String uri = request.getUri();
         String servletName = uri.substring(uri.lastIndexOf("/") + 1, uri.lastIndexOf(";"));
-        URLClassLoader loader = null;
-        PrintWriter writer = null;
-
-        try {
-            URL[] urls = new URL[1];
-            URLStreamHandler streamHandler = null;
-            File classPath = new File(HttpServer.WEB_ROOT);
-            String repository = (new URL("file", null, classPath.getCanonicalPath() + File.separator)).toString();
-            urls[0] = new URL(null, repository, streamHandler);
-            loader = new URLClassLoader(urls);
-        } catch (IOException e) {
-            System.out.println(e.toString());
-        }
-
         // 设置编码格式
         response.setCharacterEncoding("UTF-8");
 
         //
         Class<?> servletClass = null;
         try {
-            servletClass = loader.loadClass(servletName);
+            servletClass = HttpConnector.loader.loadClass(servletName);
         } catch (ClassNotFoundException e) {
             System.out.println(e.toString());
         }

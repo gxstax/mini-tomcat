@@ -14,11 +14,18 @@ import java.io.IOException;
  * @since 2024/1/9 10:36
  */
 public class TestServlet extends HttpServlet{
+    static int count = 0;
     private static final long serialVersionUID = 1L;
+
     @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response)throws ServletException, IOException {
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         System.out.println("Enter doGet()");
-        System.out.println("parameter name : "+request.getParameter("name"));
+        System.out.println("parameter name : " + request.getParameter("name"));
+        TestServlet.count++;
+        System.out.println("::::::::call count ::::::::: " + TestServlet.count);
+        if (TestServlet.count > 2) {
+            response.addHeader("Connection", "close");
+        }
         HttpSession session = request.getSession(true);
         String user = (String) session.getAttribute("user");
         System.out.println("get user from session : " + user);
@@ -26,9 +33,8 @@ public class TestServlet extends HttpServlet{
             session.setAttribute("user", "yale");
         }
         response.setCharacterEncoding("UTF-8");
-        String doc = "<!DOCTYPE html> \n" +
-                "<html>\n" +
-                "<head><meta charset=\"utf-8\"><title>Test</title></head>\n"+
+        String doc = "<!DOCTYPE html> \n" + "<html>\n" +
+                "<head><meta charset=\"utf-8\"><title>Test</title></head>\n" +
                 "<body bgcolor=\"#f0f0f0\">\n" +
                 "<h1 align=\"center\">" + "Test 你好" + "</h1>\n";
         System.out.println(doc);
