@@ -30,7 +30,8 @@ public class HttpConnector implements Runnable {
     // sessions map 存放 session
     public static Map<String, HttpSession> sessions = new ConcurrentHashMap<>();
 
-    public static URLClassLoader loader = null;
+    // 与connector 相关联的 container
+    ServletContainer container = null;
 
     public void start(HttpConnector connector) {
         Thread thread = new Thread(this);
@@ -56,18 +57,13 @@ public class HttpConnector implements Runnable {
             System.exit(1);
         }
 
-        // class loader 初始化
-        URL[] urls = new URL[1];
-        URLStreamHandler streamHandler = null;
-        File classPath = new File(HttpServer.WEB_ROOT);
-        try {
-            String repository = (new URL("file", null, classPath.getCanonicalPath() + File.separator)).toString();
-            urls[0] = new URL(null, repository, streamHandler);
-            loader = new URLClassLoader(urls);
-        } catch (IOException e) {
-            System.out.println(e.toString());
+        // initialize processors pool
+        for (int i = 0; i < minProcessors; i++) {
+            HttpProcessor initProcessor = new HttpProcessor(this);
+            initProcessor.start();
+            processors.push(initProcessor);
         }
-
+        curProcessors = minProcessors;
 
         while (true) {
             Socket socket = null;
@@ -163,5 +159,13 @@ public class HttpConnector implements Runnable {
                 result.append((char) ('A' + (b2 - 10)));
         }
         return result.toString();
+    }
+
+    public ServletContainer getContainer() {
+        return container;
+    }
+
+    public void setContainer(ServletContainer container) {
+        this.container = container;
     }
 }

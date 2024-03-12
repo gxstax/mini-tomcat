@@ -7,7 +7,7 @@ import javax.servlet.http.Cookie;
  * Cookie处理工具类
  * </p>
  *
- * @author GaoXin
+ * @author Ant
  * @since 2024/3/8 18:41
  */
 public class CookieTools {

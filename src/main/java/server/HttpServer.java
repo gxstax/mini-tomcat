@@ -15,6 +15,12 @@ public class HttpServer {
 
     public static void main(String[] args) {
         HttpConnector connector = new HttpConnector();
+        ServletContainer container = new ServletContainer();
+
+        // connector 和 container 相互引用
+        container.setConnector(connector);
+        connector.setContainer(container);
+
         connector.start(connector);
     }
 

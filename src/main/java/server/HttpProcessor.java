@@ -82,7 +82,7 @@ public class HttpProcessor implements Runnable {
                 response.sendHeaders();
 
                 if (request.getUri().startsWith("/servlet/")) {
-                    ServletProcessor processor = new ServletProcessor();
+                    ServletProcessor processor = new ServletProcessor(this.connector);
                     processor.process(request, response);
                 } else {
                     StaticResourceProcessor processor = new StaticResourceProcessor();
