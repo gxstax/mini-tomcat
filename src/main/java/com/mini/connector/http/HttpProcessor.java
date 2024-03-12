@@ -1,4 +1,4 @@
-package server;
+package com.mini.connector.http;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -64,10 +64,10 @@ public class HttpProcessor implements Runnable {
             keepAlive = true;
             while (keepAlive) {
                 // Create a request object and parse the input stream
-                HttpRequest request = new HttpRequest(input);
+                HttpRequestImpl request = new HttpRequestImpl(input);
 
                 // Create a response object and set the request
-                HttpResponse response = new HttpResponse(output);
+                HttpResponseImpl response = new HttpResponseImpl(output);
                 response.setRequest(request);
                 request.setResponse(response);
 
@@ -105,7 +105,7 @@ public class HttpProcessor implements Runnable {
         }
     }
 
-    private void finishResponse(HttpResponse response) {
+    private void finishResponse(HttpResponseImpl response) {
         response.finishResponse();
     }
 

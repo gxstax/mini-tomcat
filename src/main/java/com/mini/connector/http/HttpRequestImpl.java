@@ -1,4 +1,7 @@
-package server;
+package com.mini.connector.http;
+
+import com.mini.core.StandardContext;
+import com.mini.session.SessionFacade;
 
 import javax.servlet.*;
 import javax.servlet.http.*;
@@ -20,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Ant
  * @since 2024/1/4 17:36
  */
-public class HttpRequest implements HttpServletRequest {
+public class HttpRequestImpl implements HttpServletRequest {
 
     private InputStream input;
 
@@ -46,11 +49,11 @@ public class HttpRequest implements HttpServletRequest {
     String sessionId;
     SessionFacade sessionFacade;
 
-    private HttpResponse response;
+    private HttpResponseImpl response;
 
-    public HttpRequest() {}
+    public HttpRequestImpl() {}
 
-    public HttpRequest(InputStream input) {
+    public HttpRequestImpl(InputStream input) {
         this.input = input;
         sis = new SocketInputStream(this.input, 2048);
     }
@@ -60,7 +63,7 @@ public class HttpRequest implements HttpServletRequest {
         this.sis = new SocketInputStream(this.input, 2048);
     }
 
-    public void setResponse(HttpResponse response) {
+    public void setResponse(HttpResponseImpl response) {
         this.response = response;
     }
 
@@ -180,21 +183,25 @@ public class HttpRequest implements HttpServletRequest {
     }
 
     public  Cookie[] parseCookieHeader(String header) {
-        if ((header == null) || (header.length() < 1) )
+        if ((header == null) || (header.length() < 1) ) {
             return (new Cookie[0]);
+        }
         ArrayList<Cookie> cookieal = new ArrayList<>();
         while (header.length() > 0) {
             int semicolon = header.indexOf(';');
-            if (semicolon < 0)
+            if (semicolon < 0) {
                 semicolon = header.length();
-            if (semicolon == 0)
+            }
+            if (semicolon == 0) {
                 break;
+            }
 
             String token = header.substring(0, semicolon);
-            if (semicolon < header.length())
+            if (semicolon < header.length()) {
                 header = header.substring(semicolon + 1);
-            else
+            } else {
                 header = "";
+            }
 
             try {
                 int equals = token.indexOf('=');

@@ -1,4 +1,6 @@
-package server;
+package com.mini.connector.http;
+
+import com.mini.util.CookieTools;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
@@ -19,8 +21,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Ant
  * @since 2024/1/4 17:37
  */
-public class HttpResponse implements HttpServletResponse {
-    private HttpRequest request;
+public class HttpResponseImpl implements HttpServletResponse {
+    private HttpRequestImpl request;
 
     private OutputStream output;
 
@@ -42,13 +44,13 @@ public class HttpResponse implements HttpServletResponse {
 
     List<Cookie> cookies = new ArrayList<>();
 
-    public HttpResponse() {}
+    public HttpResponseImpl() {}
 
     public void setStream(OutputStream output) {
         this.output = output;
     }
 
-    public HttpResponse(OutputStream output) {
+    public HttpResponseImpl(OutputStream output) {
         this.output = output;
     }
 
@@ -85,7 +87,7 @@ public class HttpResponse implements HttpServletResponse {
         }
     }
 
-    public HttpRequest getRequest() {
+    public HttpRequestImpl getRequest() {
         return request;
     }
 
@@ -94,7 +96,7 @@ public class HttpResponse implements HttpServletResponse {
     }
 
 
-    public void setRequest(HttpRequest request) {
+    public void setRequest(HttpRequestImpl request) {
         this.request = request;
     }
 

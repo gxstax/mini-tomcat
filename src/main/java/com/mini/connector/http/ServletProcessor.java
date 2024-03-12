@@ -1,17 +1,10 @@
-package server;
+package com.mini.connector.http;
 
-import org.apache.commons.lang3.text.StrSubstitutor;
+import com.mini.connector.http.HttpConnector;
+import com.mini.connector.http.HttpRequestImpl;
+import com.mini.connector.http.HttpResponseImpl;
 
-import javax.servlet.Servlet;
 import javax.servlet.ServletException;
-import java.io.*;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.net.URLStreamHandler;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * <p>
@@ -34,7 +27,7 @@ public class ServletProcessor {
             "Date: ${ZonedDateTime}\r\n" +
             "\r\n";
 
-    public void process(HttpRequest request, HttpResponse response) throws ServletException {
+    public void process(HttpRequestImpl request, HttpResponseImpl response) throws ServletException {
         this.connector.getContainer().invoke(request, response);
     }
 }

@@ -1,7 +1,9 @@
-package server;
+package com.mini.connector.http;
+
+import com.mini.core.StandardContext;
+import com.mini.session.Session;
 
 import javax.servlet.http.HttpSession;
-import java.io.File;
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayDeque;
@@ -31,7 +33,7 @@ public class HttpConnector implements Runnable {
     public static Map<String, HttpSession> sessions = new ConcurrentHashMap<>();
 
     // 与connector 相关联的 container
-    ServletContainer container = null;
+    StandardContext container = null;
 
     public void start(HttpConnector connector) {
         Thread thread = new Thread(this);
@@ -149,23 +151,25 @@ public class HttpConnector implements Runnable {
         for (int i = 0; i < bytes.length; i++) {
             byte b1 = (byte) ((bytes[i] & 0xf0) >> 4);
             byte b2 = (byte) (bytes[i] & 0x0f);
-            if (b1 < 10)
+            if (b1 < 10) {
                 result.append((char) ('0' + b1));
-            else
+            } else {
                 result.append((char) ('A' + (b1 - 10)));
-            if (b2 < 10)
+            }
+            if (b2 < 10) {
                 result.append((char) ('0' + b2));
-            else
+            } else {
                 result.append((char) ('A' + (b2 - 10)));
+            }
         }
         return result.toString();
     }
 
-    public ServletContainer getContainer() {
+    public StandardContext getContainer() {
         return container;
     }
 
-    public void setContainer(ServletContainer container) {
+    public void setContainer(StandardContext container) {
         this.container = container;
     }
 }

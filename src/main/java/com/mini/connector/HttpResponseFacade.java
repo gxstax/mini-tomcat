@@ -1,4 +1,6 @@
-package server;
+package com.mini.connector;
+
+import com.mini.connector.http.HttpResponseImpl;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
@@ -20,7 +22,7 @@ public class HttpResponseFacade implements HttpServletResponse {
 
     private HttpServletResponse response;
 
-    public HttpResponseFacade(HttpResponse response) {
+    public HttpResponseFacade(HttpServletResponse response) {
         this.response = response;
     }
 

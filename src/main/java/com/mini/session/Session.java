@@ -1,4 +1,4 @@
-package server;
+package com.mini.session;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;

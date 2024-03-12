@@ -1,4 +1,7 @@
-package server;
+package com.mini.connector.http;
+
+import com.mini.connector.http.HttpHeader;
+import com.mini.connector.http.HttpRequestLine;
 
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;

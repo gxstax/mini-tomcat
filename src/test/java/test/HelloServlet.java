@@ -1,7 +1,5 @@
 package test;
 
-import server.HttpRequest;
-
 import javax.servlet.*;
 import java.io.IOException;
 
