@@ -1,10 +1,13 @@
 package com.mini.connector.http;
 
+import com.mini.Request;
+import com.mini.Response;
 import com.mini.connector.http.HttpConnector;
 import com.mini.connector.http.HttpRequestImpl;
 import com.mini.connector.http.HttpResponseImpl;
 
 import javax.servlet.ServletException;
+import java.io.IOException;
 
 /**
  * <p>
@@ -27,7 +30,7 @@ public class ServletProcessor {
             "Date: ${ZonedDateTime}\r\n" +
             "\r\n";
 
-    public void process(HttpRequestImpl request, HttpResponseImpl response) throws ServletException {
+    public void process(Request request, Response response) throws ServletException, IOException {
         this.connector.getContainer().invoke(request, response);
     }
 }

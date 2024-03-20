@@ -1,6 +1,8 @@
 package com.mini.core;
 
 import com.mini.Container;
+import com.mini.Request;
+import com.mini.Response;
 import com.mini.Wrapper;
 
 import javax.servlet.Servlet;
@@ -18,10 +20,14 @@ import java.io.IOException;
  * @since 2024/3/12 18:51
  */
 public class StandardWrapper extends ContainerBase implements Wrapper {
+
     private Servlet instance = null;
     private String servletClass;
 
     public StandardWrapper(String servletClass, StandardContext parent) {
+        super();
+        pipeline.setBasic(new StandardWrapperValve());
+
         this.parent = parent;
         this.servletClass = servletClass;
         try {
@@ -82,11 +88,11 @@ public class StandardWrapper extends ContainerBase implements Wrapper {
         return servlet;
     }
 
-    public void invoke(HttpServletRequest request, HttpServletResponse response)
+    public void invoke(Request request, Response response)
             throws IOException, ServletException {
-        if (instance != null) {
-            instance.service(request, response);
-        }
+
+        System.out.println("StandardWrapper invoke()");
+        super.invoke(request, response);
     }
 
     @Override

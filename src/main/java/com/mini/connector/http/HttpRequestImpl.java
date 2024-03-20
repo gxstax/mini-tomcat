@@ -1,5 +1,6 @@
 package com.mini.connector.http;
 
+import com.mini.*;
 import com.mini.core.StandardContext;
 import com.mini.session.SessionFacade;
 
@@ -23,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Ant
  * @since 2024/1/4 17:36
  */
-public class HttpRequestImpl implements HttpServletRequest {
+public class HttpRequestImpl implements HttpServletRequest, Request {
 
     private InputStream input;
 
@@ -734,5 +735,81 @@ public class HttpRequestImpl implements HttpServletRequest {
     @Override
     public DispatcherType getDispatcherType() {
         return null;
+    }
+
+    @Override
+    public Connector getConnector() {
+        return null;
+    }
+    @Override
+    public void setConnector(Connector connector) {
+    }
+    @Override
+    public Context getContext() {
+        return null;
+    }
+    @Override
+    public void setContext(Context context) {
+    }
+    @Override
+    public String getInfo() {
+        return null;
+    }
+    @Override
+    public ServletRequest getRequest() {
+        return null;
+    }
+    @Override
+    public Response getResponse() {
+        return null;
+    }
+    @Override
+    public void setResponse(Response response) {
+    }
+    @Override
+    public Socket getSocket() {
+        return null;
+    }
+    @Override
+    public void setSocket(Socket socket) {
+    }
+    @Override
+    public InputStream getStream() {
+        return null;
+    }
+    @Override
+    public Wrapper getWrapper() {
+        return null;
+    }
+    @Override
+    public void setWrapper(Wrapper wrapper) {
+    }
+    @Override
+    public ServletInputStream createInputStream() throws IOException {
+        return null;
+    }
+    @Override
+    public void finishRequest() throws IOException {
+    }
+    @Override
+    public void recycle() {
+    }
+    @Override
+    public void setContentLength(int length) {
+    }
+    @Override
+    public void setContentType(String type) {
+    }
+    @Override
+    public void setProtocol(String protocol) {
+    }
+    @Override
+    public void setRemoteAddr(String remote) {
+    }
+    @Override
+    public void setScheme(String scheme) {
+    }
+    @Override
+    public void setServerPort(int port) {
     }
 }

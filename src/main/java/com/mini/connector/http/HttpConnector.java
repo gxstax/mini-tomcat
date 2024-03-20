@@ -1,8 +1,7 @@
 package com.mini.connector.http;
 
-import com.mini.core.StandardContext;
+import com.mini.*;
 import com.mini.session.Session;
-
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.*;
@@ -20,7 +19,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Ant
  * @since 2024/1/4 9:21
  */
-public class HttpConnector implements Runnable {
+public class HttpConnector implements Connector, Runnable {
+
+    private String info = "com.mini.connector.http.HttpConnector/0.1";
+    private int port = 8080;
 
     int minProcessors = 3;
     int maxProcessors = 10;
@@ -33,9 +35,14 @@ public class HttpConnector implements Runnable {
     public static Map<String, HttpSession> sessions = new ConcurrentHashMap<>();
 
     // 与connector 相关联的 container
-    StandardContext container = null;
+    Container container = null;
+
+    private String threadName = null;
 
     public void start(HttpConnector connector) {
+        threadName = "HttpConnector[" + port + "]";
+        log("httpConnector.starting" + threadName);
+
         Thread thread = new Thread(this);
         thread.start();
     }
@@ -91,7 +98,7 @@ public class HttpConnector implements Runnable {
     private HttpProcessor createProcessor() {
         synchronized (processors) {
             if (processors.size() > 0) {
-                return  processors.pop();
+                return processors.pop();
             }
 
             if (curProcessors < maxProcessors) {
@@ -107,6 +114,7 @@ public class HttpConnector implements Runnable {
         processor.start();
         processors.push(processor);
         curProcessors++;
+        log("newProcessor");
         return processors.pop();
     }
 
@@ -165,11 +173,68 @@ public class HttpConnector implements Runnable {
         return result.toString();
     }
 
-    public StandardContext getContainer() {
+    //记录日志
+    private void log(String message) {
+        Logger logger = container.getLogger();
+        String localName = threadName;
+        if (localName == null) {
+            localName = "HttpConnector";
+        }
+        if (logger != null) {
+            logger.log(localName + " " + message);
+        } else {
+            System.out.println(localName + " " + message);
+        }
+    }
+
+    //记录日志
+    private void log(String message, Throwable throwable) {
+        Logger logger = container.getLogger();
+        String localName = threadName;
+        if (localName == null) {
+            localName = "HttpConnector";
+        }
+        if (logger != null) {
+            logger.log(localName + " " + message, throwable);
+        } else {
+            System.out.println(localName + " " + message);
+            throwable.printStackTrace(System.out);
+        }
+    }
+
+    public Container getContainer() {
         return container;
     }
 
-    public void setContainer(StandardContext container) {
+    public void setContainer(Container container) {
         this.container = container;
+    }
+
+    @Override
+    public String getInfo() {
+        return this.info;
+    }
+
+    @Override
+    public String getScheme() {
+        return null;
+    }
+
+    @Override
+    public void setScheme(String scheme) {
+    }
+
+    @Override
+    public Request createRequest() {
+        return null;
+    }
+
+    @Override
+    public Response createResponse() {
+        return null;
+    }
+
+    @Override
+    public void initialize() {
     }
 }

@@ -1,7 +1,9 @@
 package com.mini.core;
 
-import com.mini.Container;
+import com.mini.*;
 
+import javax.servlet.ServletException;
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -13,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Ant
  * @since 2024/3/12 18:44
  */
-public abstract class ContainerBase implements Container {
+public abstract class ContainerBase implements Container, Pipeline {
 
     // 子容器
     protected Map<String, Container> children = new ConcurrentHashMap<>();
@@ -22,6 +24,41 @@ public abstract class ContainerBase implements Container {
     protected String name = null;
     // 父容器
     protected Container parent = null;
+
+    // 日志相关信息
+    protected Logger logger = null;
+    // Pipeline
+    protected Pipeline pipeline = new StandardPipeline(this);
+
+    public Pipeline getPipeline() {
+        return this.pipeline;
+    }
+
+    public void invoke(Request request, Response response) throws ServletException, IOException {
+        System.out.println("ContainerBase invoke()");
+        pipeline.invoke(request, response);
+    }
+
+    public synchronized void addValve(Valve valve) {
+        pipeline.addValve(valve);
+    }
+
+    public Valve getBasic() {
+        return pipeline.getBasic();
+    }
+
+    public void setBasic(Valve valve) {
+        pipeline.setBasic(valve);
+    }
+
+    public Valve[] getValves() {
+        return pipeline.getValves();
+    }
+
+    public synchronized void removeValve(Valve valve) {
+        pipeline.removeValve(valve);
+    }
+
 
     public abstract String getInfo();
 
@@ -42,6 +79,7 @@ public abstract class ContainerBase implements Container {
         }
         this.loader = loader;
     }
+
     public String getName () {
         return (name);
     }
@@ -93,5 +131,56 @@ public abstract class ContainerBase implements Container {
             children.remove(child.getName());
         }
         child.setParent(null);
+    }
+
+    public Logger getLogger() {
+        if (logger != null) {
+            return (logger);
+        }
+
+        if (parent != null) {
+            return (parent.getLogger());
+        }
+
+        return (null);
+    }
+
+    public synchronized void setLogger(Logger logger) {
+        // Change components if necessary
+        Logger oldLogger = this.logger;
+        if (oldLogger == logger) {
+            return;
+        }
+        this.logger = logger;
+
+    }
+
+    protected void log(String message) {
+        Logger logger = getLogger();
+        if (logger != null) {
+            logger.log(logName() + ": " + message);
+        } else {
+            System.out.println(logName() + ": " + message);
+        }
+    }
+
+    protected void log(String message, Throwable throwable) {
+        Logger logger = getLogger();
+        if (logger != null) {
+            logger.log(logName() + ": " + message, throwable);
+        } else {
+            System.out.println(logName() + ": " + message + ": " + throwable);
+            throwable.printStackTrace(System.out);
+        }
+
+    }
+
+    protected String logName() {
+        String className = this.getClass().getName();
+        int period = className.lastIndexOf(".");
+        if (period >= 0) {
+            className = className.substring(period + 1);
+        }
+        return (className + "[" + getName() + "]");
     }
 }

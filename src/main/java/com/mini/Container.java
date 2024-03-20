@@ -37,7 +37,11 @@ public interface Container {
 
     public Container[] findChildren();
 
-    public void invoke(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException;
+    public void invoke(Request request, Response response) throws IOException, ServletException;
 
-    public void removeChild(Container child);
+    void removeChild(Container child);
+
+    public Logger getLogger();
+
+    public void setLogger(Logger logger);
 }

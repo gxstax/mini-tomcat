@@ -10,7 +10,7 @@ import javax.servlet.ServletContext;
  * @author Ant
  * @since 2024/3/12 18:34
  */
-public interface Context {
+public interface Context extends Container {
     public static final String RELOAD_EVENT = "reload";
     public String getDisplayName();
     public void setDisplayName(String displayName);
