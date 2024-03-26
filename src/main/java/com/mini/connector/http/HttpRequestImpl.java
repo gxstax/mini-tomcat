@@ -461,12 +461,12 @@ public class HttpRequestImpl implements HttpServletRequest, Request {
                 sessionFacade = new SessionFacade(session);
                 return sessionFacade;
             } else {
-                session = HttpConnector.createSession();
+                session = (HttpSession) HttpConnector.createSession();
                 sessionFacade = new SessionFacade(session);
                 return sessionFacade;
             }
         } else {
-            session = HttpConnector.createSession();
+            session = (HttpSession) HttpConnector.createSession();
             sessionFacade = new SessionFacade(session);
             sessionId = session.getId();
 

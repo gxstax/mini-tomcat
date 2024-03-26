@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLStreamHandler;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,6 +38,10 @@ public class StandardContext extends ContainerBase implements Context {
     // map<servletName, Servlet>
     Map<String, StandardWrapper> servletInstanceMap = new ConcurrentHashMap<>();
 
+    // 监听器
+    private ArrayList<ContainerListenerDef> listenerDefs = new ArrayList<>();
+    private ArrayList<ContainerListener> listeners = new ArrayList<>();
+
     public StandardContext() {
         super();
         pipeline.setBasic(new StandardContextValve());
@@ -61,6 +66,78 @@ public class StandardContext extends ContainerBase implements Context {
         log("Container created.");
     }
 
+    public void start() {
+        // 触发一个容器启动事件
+        fireContainerEvent("Container Started", this);
+    }
+
+    public void addContainerListener(ContainerListener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
+    }
+
+    public void removeContainerListener(ContainerListener listener) {
+        // 移除指定的容器监听器，并确保线程安全
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
+    }
+
+    public void fireContainerEvent(String type, Object data) {
+        // 检查是否已经有监听器，并确保线程安全
+        if (listeners.size() < 1) {
+            return;
+        }
+
+        ContainerEvent event = new ContainerEvent(this, type, data);
+        ContainerListener list[] = new ContainerListener[0];
+        synchronized (listeners) {
+            list = listeners.toArray(list);
+        }
+
+        // 遍历所有监听器并触发事件
+        for (int i = 0; i < list.length; i++) {
+            list[i].containerEvent(event);
+        }
+    }
+
+    public void addListenerDef(ContainerListenerDef listenerDef) {
+        synchronized (listeners) {
+            listenerDefs.add(listenerDef);
+        }
+    }
+
+    public boolean listenerStart() {
+        System.out.println("Listener Start..........");
+        boolean ok = true;
+
+        synchronized (listeners) {
+            listeners.clear();
+            Iterator<ContainerListenerDef> defs = listenerDefs.iterator();
+            while (defs.hasNext()) {
+                ContainerListenerDef def = defs.next();
+                ContainerListener listener = null;
+                try {
+                    // 确定我们要使用的类加载器
+                    String listenerClass = def.getListenerClass();
+                    ClassLoader classLoader = null;
+                    classLoader = this.getLoader();
+                    ClassLoader oldCtxClassloader= Thread.currentThread().getContextClassLoader();
+                    // 创建这个过滤器的新实例并返回它
+                    Class<?> clazz = classLoader.loadClass(listenerClass);
+                    listener = (ContainerListener) clazz.newInstance();
+                    addContainerListener(listener);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    ok = false;
+                }
+            }
+        }
+
+        return ok;
+    }
+
     public void addFilterDef(FilterDef filterDef) {
         filterDefs.put(filterDef.getFilterName(), filterDef);
     }
@@ -81,7 +158,7 @@ public class StandardContext extends ContainerBase implements Context {
             throw new IllegalArgumentException("standardContext.filterMap.either");
         }
         if ((urlPattern != null) && !validateURLPattern(urlPattern)) {
-            throw new IllegalArgumentException("standardContext.filterMap.pattern"+urlPattern);
+            throw new IllegalArgumentException("standardContext.filterMap.pattern" + urlPattern);
         }
 
         // Add this filter mapping to our registered set
@@ -193,6 +270,7 @@ public class StandardContext extends ContainerBase implements Context {
     public HttpConnector getConnector() {
         return connector;
     }
+
     public void setConnector(HttpConnector connector) {
         this.connector = connector;
     }

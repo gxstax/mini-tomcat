@@ -1,8 +1,12 @@
 package com.mini.session;
 
+import com.mini.Session;
+import com.mini.SessionEvent;
+import com.mini.SessionListener;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpSessionContext;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
@@ -10,29 +14,41 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * <p>
- * Session
+ * 标准 Session
  * </p>
  *
  * @author Ant
- * @since 2024/1/8 14:28
+ * @since 2024/3/26 17:10
  */
-public class Session implements HttpSession {
-
+public class StandardSession implements HttpSession, Session {
+    private transient ArrayList<SessionListener> listeners = new ArrayList<>();
     private String sessionid;
     private long creationTime;
     private boolean valid;
-    private Map<String, Object> attributes = new ConcurrentHashMap<>();
+    private Map<String,Object> attributes = new ConcurrentHashMap<>();
 
-    public void setSessionid(String sessionid) {
-        this.sessionid = sessionid;
+    public void addSessionListener(SessionListener listener) {
+        synchronized (listeners) {
+            listeners.add(listener);
+        }
     }
-
-    public void setValid(boolean valid) {
-        this.valid = valid;
+    public void removeSessionListener(SessionListener listener) {
+        synchronized (listeners) {
+            listeners.remove(listener);
+        }
     }
-
-    public void setAttributes(Map<String, Object> attributes) {
-        this.attributes = attributes;
+    public void fireSessionEvent(String type, Object data) {
+        if (listeners.size() < 1) {
+            return;
+        }
+        SessionEvent event = new SessionEvent(this, type, data);
+        SessionListener list[] = new SessionListener[0];
+        synchronized (listeners) {
+            list = (SessionListener[]) listeners.toArray(list);
+        }
+        for (int i = 0; i < list.length; i++) {
+            ((SessionListener) list[i]).sessionEvent(event);
+        }
     }
 
     @Override
@@ -57,7 +73,6 @@ public class Session implements HttpSession {
 
     @Override
     public void setMaxInactiveInterval(int interval) {
-
     }
 
     @Override
@@ -87,7 +102,7 @@ public class Session implements HttpSession {
 
     @Override
     public String[] getValueNames() {
-        return new String[0];
+        return null;
     }
 
     @Override
@@ -107,7 +122,6 @@ public class Session implements HttpSession {
 
     @Override
     public void removeValue(String name) {
-
     }
 
     @Override
@@ -120,11 +134,47 @@ public class Session implements HttpSession {
         return false;
     }
 
+    public void setValid(boolean b) {
+        this.valid = b;
+    }
+
     public void setCreationTime(long currentTimeMillis) {
         this.creationTime = currentTimeMillis;
+
     }
 
     public void setId(String sessionId) {
         this.sessionid = sessionId;
+        fireSessionEvent(Session.SESSION_CREATED_EVENT, null);
+    }
+    @Override
+    public String getInfo() {
+        return null;
+    }
+
+    @Override
+    public void setNew(boolean isNew) {
+    }
+
+    @Override
+    public HttpSession getSession() {
+        return null;
+    }
+
+    @Override
+    public boolean isValid() {
+        return false;
+    }
+
+    @Override
+    public void access() {
+    }
+
+    @Override
+    public void expire() {
+    }
+
+    @Override
+    public void recycle() {
     }
 }

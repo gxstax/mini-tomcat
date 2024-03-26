@@ -3,9 +3,11 @@ package com.mini.core;
 import com.mini.*;
 import com.mini.connector.http.HttpRequestImpl;
 import com.mini.valves.ValveBase;
-
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 /**
@@ -35,8 +37,6 @@ public class StandardContextValve extends ValveBase {
     public void invoke(Request request, Response response, ValveContext valveContext)
             throws IOException, ServletException {
         System.out.println("StandardContextValve invoke()");
-//        Servlet instance = ((StandardWrapper) getContainer()).getServlet();
-
 
         StandardWrapper servletWrapper = null;
         String uri = ((HttpRequestImpl) request).getUri();
@@ -55,26 +55,5 @@ public class StandardContextValve extends ValveBase {
         }
     }
 
-    /**
-     * <p>
-     * 根据context中的filter map信息挑选出符合模式的filter，创建filterChain
-     * </p>
-     *
-     * @param request
-     * @param servlet
-     * @return com.mini.core.ApplicationFilterChain
-     */
-    private ApplicationFilterChain createFilterChain(Request request, Servlet servlet) {
-        System.out.println("createFilterChain()");
-        if (null == servlet) {
-            return null;
-        }
 
-        ApplicationFilterChain filterChain = new ApplicationFilterChain();
-        filterChain.setServlet(servlet);
-
-        StandardWrapper wrapper = (StandardWrapper) getContainer();
-
-        return filterChain;
-    }
 }

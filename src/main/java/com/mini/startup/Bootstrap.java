@@ -2,6 +2,9 @@ package com.mini.startup;
 
 import com.mini.Logger;
 import com.mini.connector.http.HttpConnector;
+import com.mini.core.ContainerListenerDef;
+import com.mini.core.FilterDef;
+import com.mini.core.FilterMap;
 import com.mini.core.StandardContext;
 import com.mini.logger.FileLogger;
 
@@ -34,9 +37,29 @@ public class Bootstrap {
         container.setConnector(connector);
         connector.setContainer(container);
 
-
         container.setLogger(logger);
 
+        // 过滤器相关
+        FilterDef filterDef = new FilterDef();
+        filterDef.setFilterName("TestFilter");
+        filterDef.setFilterClass("test.TestFilter");
+        container.addFilterDef(filterDef);
+
+        FilterMap filterMap = new FilterMap();
+        filterMap.setFilterName("TestFilter");
+        filterMap.setURLPattern("/*");
+        container.addFilterMap(filterMap);
+        container.filterStart();
+
+        // 监听器相关
+        ContainerListenerDef listenerDef = new ContainerListenerDef();
+        listenerDef.setListenerName("TestListener");
+        listenerDef.setListenerClass("test.TestListener");
+
+        container.addListenerDef(listenerDef);
+        container.listenerStart();
+
+        container.start();
         connector.start(connector);
     }
 

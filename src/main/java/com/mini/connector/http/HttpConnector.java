@@ -1,7 +1,8 @@
 package com.mini.connector.http;
 
 import com.mini.*;
-import com.mini.session.Session;
+import com.mini.session.StandardSession;
+
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.*;
@@ -136,7 +137,7 @@ public class HttpConnector implements Connector, Runnable {
      * @return the new session
      */
     public static Session createSession() {
-        Session session = new Session();
+        StandardSession session = new StandardSession();
         session.setValid(true);
         session.setCreationTime(System.currentTimeMillis());
         String sessionId = generateSessionId();
