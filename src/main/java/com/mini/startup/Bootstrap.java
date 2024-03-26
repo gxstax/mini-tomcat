@@ -25,14 +25,16 @@ public class Bootstrap {
         if (debug >= 0) {
             log(".... startup ....");
         }
+        Logger logger = new FileLogger();
+
         HttpConnector connector = new HttpConnector();
-        StandardContext container = new StandardContext();
+        StandardContext container = new StandardContext(logger);
 
         // connector 和 container 相互引用
         container.setConnector(connector);
         connector.setContainer(container);
 
-        Logger logger = new FileLogger();
+
         container.setLogger(logger);
 
         connector.start(connector);

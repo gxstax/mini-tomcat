@@ -135,12 +135,11 @@ public class StandardPipeline implements Pipeline {
             // Invoke the requested Valve for the current request thread
             if (subscript < valves.length) {
                 valves[subscript].invoke(request, response, this);
-            } else if ((subscript == valves.length) && (basic != null))  {
+            } else if ((subscript == valves.length) && (basic != null)) {
                 basic.invoke(request, response, this);
             } else {
-                throw new ServletException("standardPipeline。noValve");
+                throw new ServletException("standardPipeline.noValve");
             }
-
         }
     }
 

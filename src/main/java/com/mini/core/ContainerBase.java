@@ -134,8 +134,8 @@ public abstract class ContainerBase implements Container, Pipeline {
     }
 
     public Logger getLogger() {
-        if (logger != null) {
-            return (logger);
+        if (this.logger != null) {
+            return this.logger;
         }
 
         if (parent != null) {

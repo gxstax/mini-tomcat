@@ -41,7 +41,7 @@ public class HttpConnector implements Connector, Runnable {
 
     public void start(HttpConnector connector) {
         threadName = "HttpConnector[" + port + "]";
-        log("httpConnector.starting" + threadName);
+        log("httpConnector.starting...");
 
         Thread thread = new Thread(this);
         thread.start();

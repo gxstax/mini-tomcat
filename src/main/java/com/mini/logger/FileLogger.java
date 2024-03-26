@@ -22,7 +22,7 @@ public class FileLogger extends LoggerBase {
     private String date = "";
     private String directory = "logs";
     protected static final String info = "com.mini.logger.FileLogger/0.1";
-    private String prefix = "mini";
+    private String prefix = "mini_";
 
     private StringManager sm = StringManager.getManager(Constants.Package);
     private boolean started = false;
